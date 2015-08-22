@@ -27,6 +27,18 @@
 *.i*86
 *.x86_64
 *.hex
+cformat
 
 # Debug files
 *.dSYM/
+
+# Vim stuff
+.vim
+.vimrc
+# Created by https://www.gitignore.io/api/vim
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
+*~
