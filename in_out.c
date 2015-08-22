@@ -47,3 +47,20 @@ bool same_file( char * fname1, char * fname2 )
 	}
 	return false;
 }
+
+bool get_fname( char * fname, int lim ) 
+{
+	for(;;) {
+		char c;
+		if( (c = getchar()) == EOF ) {
+			return false;
+		}
+		ungetc( c, stdin );
+		if( get_line( fname, lim ) == 0 ) {
+			printf( "Try again (Ctrl-D to exit: " );
+			continue;
+		}
+		else 
+			return true;
+	}
+}

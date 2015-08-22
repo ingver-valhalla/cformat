@@ -18,4 +18,7 @@ bool open_file( FILE **fp, char *file_name, char *mode );
  * strings) */
 bool same_file( char * fname1, char * fname2 );
 
+/* get_fname: waits for input; returns false on Ctrl-D */
+bool get_fname( char * fname, int lim ); 
+
 #endif //IN_OUT_H
