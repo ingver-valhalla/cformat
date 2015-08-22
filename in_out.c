@@ -1,5 +1,10 @@
 // in_out.c
 
+#include <string.h>
+#include <limits.h>
+#ifndef PATH_MAX
+  #define PATH_MAX 1024
+#endif // PATH_MAX
 #include <stdio.h>
 #include "in_out.h"
 
@@ -25,4 +30,20 @@ bool open_file( FILE **fp, char *file_name, char *mode )
         return false;
     }
     return true;
+}
+
+bool same_file( char * fname1, char * fname2 )
+{
+	char buf1[PATH_MAX];
+	char buf2[PATH_MAX];
+	char * real1;
+	char * real2;
+	
+	real1 = realpath( fname1, buf1 );
+	real2 = realpath( fname2, buf2 );
+
+	if( !strcmp( real1, real2 ) ) {
+		return true;
+	}
+	return false;
 }

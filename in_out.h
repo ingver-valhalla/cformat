@@ -13,5 +13,9 @@ int get_line( char *line, int lim );
 /* open_file: wraps fopen with error-handling */
 bool open_file( FILE **fp, char *file_name, char *mode );
 
+/* same_file: using standard function realpath to check if fname1 and fname2 
+ * refer to one file in the filesystem (arguments must be null-terminated 
+ * strings) */
+bool same_file( char * fname1, char * fname2 );
+
 #endif //IN_OUT_H
- 
