@@ -68,3 +68,12 @@ bool get_fname( char * fname, int lim )
 			return true;
 	}
 }
+
+bool close_file( FILE ** fp )
+{
+	if( !fp || !*fp || fclose( *fp ) == EOF ) {
+		return false;
+	}
+	*fp = NULL;
+	return true;
+}

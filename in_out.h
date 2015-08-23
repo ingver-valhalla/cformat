@@ -21,4 +21,8 @@ bool same_file( char * fname1, char * fname2 );
 /* get_fname: waits for input; returns false on Ctrl-D */
 bool get_fname( char * fname, int lim ); 
 
+/* close_file: wraps fclose() with error handling.
+ * Sets *fp to NULL and returns true if succeeded */
+bool close_file( FILE ** fp );
+
 #endif //IN_OUT_H
