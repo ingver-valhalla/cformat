@@ -6,53 +6,13 @@
 #include <string.h>
 #include <sys/stat.h>
 #include "in_out.h"
+#include "buf.h"
 
 #define MAX_LINE 100
 
-void print_help( void )
+void print_help( char ** argv )
 {
-	printf( "Usage: cformat [<input> <output>]\n" );
-}
-
-bool alloc_buffer( char * fname, char ** buf, size_t * size )
-{
-	struct stat fstat;
-	if( stat( fname, &fstat ) ) {
-		printf( "Unable to get stat of %s\n", fname );
-		return false;
-	}
-	*size = fstat.st_size;
-	*buf = (char *) calloc( *size + 1, 1 );
-	if( !*buf ) {
-		printf( "Can't allocate memory for %s\n", fname );
-		return false;
-	}
-	(*buf)[*size] = EOF;
-	return true;
-}
-
-bool read_to_buf( FILE * fp, char * buf, size_t size )
-{
-	if( !fp || !buf || size != fread( buf, 1, size, fp ) ) {
-		return false;
-	}
-	return true;
-}
-
-void print_buf( char * buf, size_t size ) 
-{
-	char * end = buf + size;
-	while( buf != end ) {
-		putchar( *buf++ );
-	}
-}
-
-bool buf_to_file( FILE * fp, char * buf, size_t size )
-{
-	if( !fp || !buf || size != fwrite( buf, 1, size, fp ) ) {
-		return false;
-	}
-	return true;
+	printf( "Usage: %s [<input> <output>]\n", argv[0] );
 }
 
 void fail( char * msg )
@@ -61,18 +21,31 @@ void fail( char * msg )
 	exit( EXIT_FAILURE );
 }
 
+bool alloc_buffer( char * fname, FileBuf * buf )
+{
+	struct stat fstat;
+	if( stat( fname, &fstat ) ) {
+		printf( "Unable to get stat of %s\n", fname );
+		return false;
+	}
+	if( !alloc_fbuf( buf, fstat.st_size ) ) {
+		return false;
+	}
+	return true;
+}
+
+
 int main( int argc, char * argv[] )
 {
-	FILE  *in_file = NULL;
-	FILE  *out_file = NULL;
-	FILE **second_file = NULL; /* equals (*in_file) if one file passed */
+	FILE  *  in_file = NULL;
+	FILE  *  out_file = NULL;
+	FILE  ** second_file = NULL; /* equals (*in_file) if one file passed */
 
-	char in_fname[MAX_LINE];
-	char out_fname[MAX_LINE];
+	char   in_fname[MAX_LINE];
+	char   out_fname[MAX_LINE];
 	char * second_fname; /* equals in_fname if one file passed */
 
-	char * file_buffer = NULL;
-	size_t buf_size = 0;
+	FileBuf file_buffer = new_fbuf();
 	
 	if( argc == 1 ) {
 		/* Program called without arguments. 
@@ -89,7 +62,7 @@ int main( int argc, char * argv[] )
 		}
 	}
 	else if( argc != 3 ) {
-		print_help();
+		print_help( argv );
 		exit( EXIT_SUCCESS );
 	}
 	else {
@@ -122,15 +95,15 @@ int main( int argc, char * argv[] )
 		fail("Failed open file in \'r\' mode");
 	}
 
-	if( !alloc_buffer( in_fname, &file_buffer, &buf_size ) ) {
+	if( !alloc_buffer( in_fname, &file_buffer ) ) {
 		fail( "Can't allocate memory for input file" );
 	}
-	printf( "Allocated %lu bytes for %s\n", buf_size, in_fname );
+	printf( "Allocated %lu bytes for %s\n", file_buffer.size, in_fname );
 	
-	if( !read_to_buf( in_file, file_buffer, buf_size ) ) {
+	if( !read_to_buf( in_file, &file_buffer ) ) {
 		fail( "Can't read input file" );
 	}
-	print_buf( file_buffer, buf_size );
+	buf_to_file( stdout, &file_buffer );
 
 	if( !close_file( &in_file ) ) {
 		fail( "Error occured while closing file" );
@@ -140,7 +113,7 @@ int main( int argc, char * argv[] )
 		fail("Failed open file in \'w\' mode");
 	}
 /**for debug******/
-	if( !buf_to_file( *second_file, file_buffer, buf_size ) ) {
+	if( !buf_to_file( *second_file, &file_buffer ) ) {
 		fail( "Error occured while writing buffer to file" );
 	}
 /*****************/
