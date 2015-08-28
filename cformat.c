@@ -24,7 +24,7 @@ void fail( char * msg )
 bool alloc_buffer( char * fname, FileBuf * buf )
 {
 	struct stat fstat;
-	if( stat( fname, &fstat ) ) {
+	if( stat( fname, & fstat ) ) {
 		printf( "Unable to get stat of %s\n", fname );
 		return false;
 	}
