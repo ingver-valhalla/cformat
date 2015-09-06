@@ -10,20 +10,16 @@ typedef enum {
 	MUL_COMMENT ,
 	COMMENT     ,
 
-	IDENT       ,
-	NUM_CONST   ,
-	CHR_LIT     ,
-	STR_LIT     ,
-
 	IF_KW       ,
 	ELSE_KW     ,
 	FOR_KW      ,
 	WHILE_KW    ,
 	DO_KW       ,
 
-	OP          ,
-	STRUCT_SEP  ,
-	ELLIPSIS    ,
+	IDENT       ,
+	NUM_CONST   ,
+	CHR_LIT     ,
+	STR_LIT     ,
 
 	LPAREN      ,
 	RPAREN      ,
@@ -33,29 +29,31 @@ typedef enum {
 	RBRACKET    ,
 
 	ASSIGN_OP   ,
+	OP          ,
+	ELLIPSIS    ,
+	STRUCT_SEP  ,
+
 	COMMA       ,
 	SEMICOLON   ,
 	COLON       ,
 	QUESTION    ,
 
-	LAST_TOKEN_TYPE
+	EOF_TOK     ,
+	
+	NUM_TOKEN_TYPES
 } TokenType;
 
 /* Token points to group of chars in a buffer */
 typedef struct Token {
 	TokenType    type;
-	const char * start;
-	const char * end;
+	char       * start;
+	char       * end;
 } Token;
 
 /* new_tok: retruns initialized token */
 Token new_tok();
 
 /* get_token: searches token inside null-terminated string */
-Token get_token( const char * str );
-
-
-/* 
-*/
+Token get_token( char * str );
 
 #endif // TOKEN_H

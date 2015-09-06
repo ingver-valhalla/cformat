@@ -24,7 +24,7 @@ static int first_word( const char * src, const char * word )
 	       && *end != '_';
 }
 
-Token get_token( const char * ptr )
+Token get_token( char * ptr )
 {
 	Token tk = new_tok();
 
@@ -41,14 +41,14 @@ Token get_token( const char * ptr )
 			if( *ptr == '\0' || *ptr == EOF
 			    || (*ptr == '\n' && *(ptr-1) != '\\') )
 			{
-				tk.end = ptr + 1;
+				tk.end = ptr;
 				return tk;
 			}
 			++ptr;
 		}
 	}
 	/* multi-line commentary */
-	else if( *ptr == '/' && *(ptr+1) == '*' ) {
+	else if( *ptr == '/' && ptr[1] == '*' ) {
 		tk.type  = MUL_COMMENT;
 		tk.start = ptr;
 
@@ -63,80 +63,18 @@ Token get_token( const char * ptr )
 				tk.end = ptr + 1;
 				return tk;
 			}
+			++ptr;
 		}
 	}
 	/* commentary */
-	else if( *ptr == '/' || *(ptr+1) == '/' ) {
+	else if( *ptr == '/' && *(ptr+1) == '/' ) {
 		tk.type  = COMMENT;
 		tk.start = ptr;
 		
 		ptr += 2;
 		while( 1 ) {
 			if( *ptr == '\n' && *(ptr-1) != '\\' ) {
-				tk.end = ptr + 1;
-				return tk;
-			}
-		}
-	}
-	/* identifier */
-	else if( isalpha( *ptr ) || *ptr == '_' ) {
-		tk.type  = IDENT;
-		tk.start = ptr;
-
-		++ptr;
-		while( isalnum( *ptr ) || *ptr == '_' )
-			++ptr;
-		
-		tk.end = ptr + 1;
-	}
-	/* numeric constant */
-	else if( isdigit( *ptr ) ) {
-		tk.type = NUM_CONST;
-		tk.start = ptr;
-
-		++ptr;
-		/* Don't care much about syntax correctness */
-		while( isxdigit( *ptr ) || *ptr == '.' || *ptr == '+' || *ptr == '-' )
-			++ptr;
-		
-		tk.end = ptr + 1;
-	}
-	/* char literal */
-	else if( *ptr == '\'' ) {
-		tk.type  = CHR_LIT;
-		tk.start = ptr;
-
-		++ptr;
-		while( *ptr != '\'' ) {
-			/* unexpeted EOL or EOS or EOF */
-			if( *ptr == '\n' || *ptr == '\0' || *ptr == EOF ) {
-				tk = new_tok();
-				return tk;
-			}
-			++ptr;
-		}
-		tk.end = ptr + 1;
-	}
-	/* string literal */
-	else if( *ptr == '\"' ) {
-		tk.type = STR_LIT;
-		tk.start = ptr;
-
-		++ptr;
-		while( 1 ) {
-			/* unexpected EOF or EOS */
-			if( *ptr == EOF || *ptr == '\0' ) {
-				tk = new_tok();
-				return tk;
-			}
-			/* unexpected EOL */
-			if( *ptr == '\n' && *(ptr-1) != '\\' ) { 
-				tk = new_tok();
-				return tk;
-			}
-
-			if( *ptr == '\"' && *(ptr-1) != '\\' ) {
-				tk.end = ptr + 1;
+				tk.end = ptr;
 				return tk;
 			}
 			++ptr;
@@ -172,43 +110,78 @@ Token get_token( const char * ptr )
 		tk.start = ptr;
 		tk.end   = ptr + strlen( "do" );
 	}
-	/* one-symbol operators */
-	else if( *ptr == '*' || *ptr == '/' 
-	         || *ptr == '+' || *ptr == '-'
-	         || *ptr == '~' || *ptr == '!' 
-	         || *ptr == '&' || *ptr == '|' 
-	         || *ptr == '%' || *ptr == '^'
-	         || *ptr == '<' || *ptr == '>' )
-	{
-		tk.type  = OP;
+	/* identifier */
+	else if( isalpha( *ptr ) || *ptr == '_' ) {
+		tk.type  = IDENT;
 		tk.start = ptr;
-		tk.end   = ptr + 1;
+
+		++ptr;
+		while( isalnum( *ptr ) || *ptr == '_' )
+			++ptr;
+		
+		tk.end = ptr;
 	}
-	/* two-symbol operators */
-	else if( (*ptr == '+' && ptr[1] == '+')
-	         || (*ptr == '-' && ptr[1] == '-')
-	         || (*ptr == '<' && ptr[1] == '<')
-	         || (*ptr == '>' && ptr[1] == '>')
-	         || (*ptr == '&' && ptr[1] == '&')
-	         || (*ptr == '|' && ptr[1] == '|')
-	         || (*ptr == '<' && ptr[1] == '=')
-	         || (*ptr == '>' && ptr[1] == '=') )
-	{
-		tk.type  = OP;
+	/* numeric constant */
+	else if( isdigit( *ptr ) ) {
+		tk.type = NUM_CONST;
 		tk.start = ptr;
-		tk.end   = ptr + 2;
+
+		++ptr;
+		/* Don't care much about syntax correctness */
+		while( isxdigit( *ptr ) || *ptr == '.' || *ptr == '+' || *ptr == '-' )
+			++ptr;
+		
+		tk.end = ptr;
 	}
-	/* struct separator */
-	else if( *ptr == '.' || (*ptr == '-' && ptr[1] == '>') ) {
-	         tk.type  = STRUCT_SEP;
-	         tk.start = ptr;
-	         tk.end   = ptr + 1 + (*ptr =  = '-');
-	}
-	/* ellipsis */
-	else if( *ptr == '.' && ptr[1] == '.' && ptr[2] == '.' ) {
-		tk.type  = ELLIPSIS;
+	/* char literal */
+	else if( *ptr == '\'' ) {
+		tk.type  = CHR_LIT;
 		tk.start = ptr;
-		tk.end   = ptr + 3;
+
+		/* if found '\'' or '\\' literal */
+		if( ptr[1] == '\\' && (ptr[2] == '\'' || ptr[2] == '\\') 
+		    && ptr[3] == '\'' ) {
+			tk.end = ptr + 4;
+			return tk;
+		}
+		++ptr;
+		while( 1 ) {
+			/* unexpeted EOL or EOS or EOF */
+			if( *ptr == '\n' || *ptr == '\0' || *ptr == EOF ) {
+				tk = new_tok();
+				return tk;
+			}
+			if( *ptr == '\'' ) {
+				tk.end = ptr + 1;
+				return tk;
+			}
+			++ptr;
+		}
+	}
+	/* string literal */
+	else if( *ptr == '\"' ) {
+		tk.type = STR_LIT;
+		tk.start = ptr;
+
+		++ptr;
+		while( 1 ) {
+			/* unexpected EOF or EOS */
+			if( *ptr == EOF || *ptr == '\0' ) {
+				tk = new_tok();
+				return tk;
+			}
+			/* unexpected EOL */
+			if( *ptr == '\n' && *(ptr-1) != '\\' ) { 
+				tk = new_tok();
+				return tk;
+			}
+
+			if( *ptr == '\"' && *(ptr-1) != '\\' ) {
+				tk.end = ptr + 1;
+				return tk;
+			}
+			++ptr;
+		}
 	}
 	/* left paren */
 	else if( *ptr == '(' ) {
@@ -247,7 +220,8 @@ Token get_token( const char * ptr )
 		tk.end   = ptr + 1;
 	} 
 	/* assign operators */
-	else if( *ptr == '=' || (*ptr == '+' && ptr[1] == '=' )
+	else if( (*ptr == '=' && ptr[1] != '=' )
+	         || (*ptr == '+' && ptr[1] == '=' )
 	         || (*ptr == '-' && ptr[1] == '=' ) 
 	         || (*ptr == '*' && ptr[1] == '=' )
 	         || (*ptr == '/' && ptr[1] == '=' )
@@ -262,6 +236,46 @@ Token get_token( const char * ptr )
 		tk.start = ptr;
 		tk.end   = strchr( ptr, '=' ) + 1;
 	} 
+	/* two-symbol operators */
+	else if( (*ptr == '+' && ptr[1] == '+')
+	         || (*ptr == '-' && ptr[1] == '-')
+	         || (*ptr == '<' && ptr[1] == '<')
+	         || (*ptr == '>' && ptr[1] == '>')
+	         || (*ptr == '&' && ptr[1] == '&')
+	         || (*ptr == '|' && ptr[1] == '|')
+	         || (*ptr == '<' && ptr[1] == '=')
+	         || (*ptr == '>' && ptr[1] == '=') 
+	         || (*ptr == '=' && ptr[1] == '=')
+	         || (*ptr == '!' && ptr[1] == '=') )
+	{
+		tk.type  = OP;
+		tk.start = ptr;
+		tk.end   = ptr + 2;
+	}
+	/* one-symbol operators */
+	else if( *ptr == '*' || *ptr == '/' 
+	         || *ptr == '+' || *ptr == '-'
+	         || *ptr == '~' || *ptr == '!' 
+	         || *ptr == '&' || *ptr == '|' 
+	         || *ptr == '%' || *ptr == '^'
+	         || *ptr == '<' || *ptr == '>' )
+	{
+		tk.type  = OP;
+		tk.start = ptr;
+		tk.end   = ptr + 1;
+	}
+	/* ellipsis */
+	else if( *ptr == '.' && ptr[1] == '.' && ptr[2] == '.' ) {
+		tk.type  = ELLIPSIS;
+		tk.start = ptr;
+		tk.end   = ptr + 3;
+	}
+	/* struct separator */
+	else if( *ptr == '.' || (*ptr == '-' && ptr[1] == '>') ) {
+	         tk.type  = STRUCT_SEP;
+	         tk.start = ptr;
+	         tk.end   = ptr + 1 + (*ptr == '-');
+	}
 	/* comma */
 	else if( *ptr == ',' ) {
 		tk.type  = COMMA;
@@ -285,6 +299,12 @@ Token get_token( const char * ptr )
 		tk.type  = QUESTION;
 		tk.start = ptr;
 		tk.end   = ptr + 1;
+	}
+	/* caught end of file */
+	else if( *ptr == EOF ) {
+		tk.type = EOF_TOK;
+		tk.start = ptr;
+		tk.end = ptr + 1;
 	}
 
 	return tk;
