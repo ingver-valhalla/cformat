@@ -4,20 +4,41 @@
   #define TOKEN_H
 
 typedef enum {
-	NOTOKEN = 0,
-	IDENT,
-	CHAR,
-	STRING,
-	
-	PARENTHESES,
-	LPAREN,
-	RPAREN,
-	LBRACE,
-	RBRACE,
-	LBRACKET,
-	RBRACKET,
-	
-	NUM_OF_TOKEN_TYPES
+	NOTOKEN = 0 ,
+
+	PREPROC     ,
+	MUL_COMMENT ,
+	COMMENT     ,
+
+	IDENT       ,
+	NUM_CONST   ,
+	CHR_LIT     ,
+	STR_LIT     ,
+
+	IF_KW       ,
+	ELSE_KW     ,
+	FOR_KW      ,
+	WHILE_KW    ,
+	DO_KW       ,
+
+	OP          ,
+	STRUCT_SEP  ,
+	ELLIPSIS    ,
+
+	LPAREN      ,
+	RPAREN      ,
+	LBRACE      ,
+	RBRACE      ,
+	LBRACKET    ,
+	RBRACKET    ,
+
+	ASSIGN_OP   ,
+	COMMA       ,
+	SEMICOLON   ,
+	COLON       ,
+	QUESTION    ,
+
+	LAST_TOKEN_TYPE
 } TokenType;
 
 /* Token points to group of chars in a buffer */
@@ -36,4 +57,5 @@ Token get_token( const char * str );
 
 /* 
 */
+
 #endif // TOKEN_H
