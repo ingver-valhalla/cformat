@@ -15,43 +15,43 @@ FileBuf new_fbuf()
 	return buf;
 }
 
-bool alloc_fbuf( FileBuf * buf, size_t size )
+int alloc_fbuf( FileBuf * buf, size_t size )
 {
-	if( !buf ) return false;
+	if( !buf ) return 0;
 
 	buf->dat = (char *) calloc( size + 1, 1 ); /* +1 for EOF */
 	if( !buf->dat ) {
 		fprintf( stderr, "Can't allocate %lu bytes for file buffer\n",
 		         size + 1 );
-		return false;
+		return 0;
 	}
 	buf->end = buf->dat + size;
 	buf->dat[size] = EOF; /* buf->end points to EOF */
 	buf->head = buf->dat;
 	buf->size = size;
-	return true;
+	return 1;
 }	
 
-bool buf_to_file( FILE * fp, const FileBuf * buf )
+int buf_to_file( FILE * fp, const FileBuf * buf )
 {
 	if( !fp || !buf ) {
-		return false;
+		return 0;
 	}
 	if( buf->size != fwrite( buf->dat, 1, buf->size, fp ) ) {
-		return false;
+		return 0;
 	}
-	return true;
+	return 1;
 }
 
-bool read_to_buf( FILE * fp, FileBuf * buf )
+int read_to_buf( FILE * fp, FileBuf * buf )
 {
 	if( !fp || !buf || !buf->dat || !buf->size ) {
-		return false;
+		return 0;
 	}
 	if( buf->size != fread( buf->dat, 1, buf->size, fp ) ) {
-		return false;
+		return 0;
 	}
-	return true;
+	return 1;
 }
 
 void free_fbuf( FileBuf * buf)

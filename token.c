@@ -48,6 +48,8 @@ Token get_token( char * ptr )
 			if( (*ptr == '/' && ptr[1] == '*')
 			    || (*ptr == '/' && ptr[1] == '/') )
 			{
+				/* found commentary on the same line.
+				 * ignore spaces after preproc */
 				while( isspace( *--ptr ) );
 				tk.end = ptr + 1;
 				return tk;
@@ -161,7 +163,8 @@ Token get_token( char * ptr )
 
 		++ptr;
 		/* Don't care much about syntax correctness */
-		while( isxdigit( *ptr ) || *ptr == '.' || *ptr == '+' || *ptr == '-' )
+		while( isxdigit( *ptr ) || *ptr == '.' 
+		       || *ptr == '+' || *ptr == '-' )
 			++ptr;
 		
 		tk.end = ptr;

@@ -1,37 +1,39 @@
 // cformat.c
 
 #include <stdio.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include "in_out.h"
 #include "buf.h"
 
+#define DEBUG_ON
+
 #define MAX_LINE 100
 
 void print_help( char ** argv )
 {
-	printf( "Usage: %s [<input> <output>]\n", argv[0] );
+	fprintf( stderr, "Usage: %s [<input> <output>]\n", argv[0] );
 }
 
-void fail( char * msg )
+void fail( const char * msg )
 {
-	puts( msg );
+	fputs( msg, stderr );
+	fprintf( stderr, "\n" );
 	exit( EXIT_FAILURE );
 }
 
-bool alloc_buffer( char * fname, FileBuf * buf )
+int alloc_buffer( char * fname, FileBuf * buf )
 {
 	struct stat fstat;
 	if( stat( fname, & fstat ) ) {
-		printf( "Unable to get stat of %s\n", fname );
-		return false;
+		fprintf( stderr, "Unable to get stat of %s\n", fname );
+		return 0;
 	}
 	if( !alloc_fbuf( buf, fstat.st_size ) ) {
-		return false;
+		return 0;
 	}
-	return true;
+	return 1;
 }
 
 
@@ -66,9 +68,9 @@ int main( int argc, char * argv[] )
 		exit( EXIT_SUCCESS );
 	}
 	else {
-/**for debug****/
+#ifdef DEBUG_ON
 		printf( "Arguments passed\n" ); 
-/***************/
+#endif
 		strncpy( in_fname, argv[1], MAX_LINE );
 		in_fname[MAX_LINE - 1] = '\0';
 		strncpy( out_fname, argv[2], MAX_LINE );
@@ -77,16 +79,16 @@ int main( int argc, char * argv[] )
 
 
 	if( same_file( in_fname, out_fname ) ) {
-/**for debug*******/
+#ifdef DEBUG_ON
 		printf( "It's the same file\n" );
-/******************/
+#endif
 		second_file = &in_file;
 		second_fname = in_fname;
 	}
 	else {
-/**for debug*******/
+#ifdef DEBUG_ON
 		printf( "These are different\n" );
-/******************/
+#endif
 		second_file = &out_file;
 		second_fname = out_fname;
 	}
@@ -98,7 +100,9 @@ int main( int argc, char * argv[] )
 	if( !alloc_buffer( in_fname, &file_buffer ) ) {
 		fail( "Can't allocate memory for input file" );
 	}
+#ifndef DEBUG_ON
 	printf( "Allocated %lu bytes for %s\n", file_buffer.size, in_fname );
+#endif
 	
 	if( !read_to_buf( in_file, &file_buffer ) ) {
 		fail( "Can't read input file" );
@@ -112,11 +116,11 @@ int main( int argc, char * argv[] )
 	if( !open_file( second_file, second_fname, "w" ) ) {
 		fail("Failed open file in \'w\' mode");
 	}
-/**for debug******/
+#ifdef DEBUG_ON
 	if( !buf_to_file( *second_file, &file_buffer ) ) {
 		fail( "Error occured while writing buffer to file" );
 	}
-/*****************/
+#endif
 	/* Ended processing a file. Returning */
 	return 0;
 }

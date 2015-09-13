@@ -19,20 +19,20 @@ int get_line( char *line, int lim )
 	return p - line;
 }
 
-bool open_file( FILE **fp, char *file_name, char *mode )
+int open_file( FILE **fp, char *file_name, char *mode )
 {
 	if( fp == NULL ) {
-		return false;
+		return 0;
 	}
 	*fp = fopen( file_name, mode );
 	if( *fp == NULL ) {
 		fprintf( stderr, "Cannot open file: %s\n", file_name );
-		return false;
+		return 0;
 	}
-	return true;
+	return 1;
 }
 
-bool same_file( char * fname1, char * fname2 )
+int same_file( char * fname1, char * fname2 )
 {
 	char buf1[PATH_MAX];
 	char buf2[PATH_MAX];
@@ -47,17 +47,17 @@ bool same_file( char * fname1, char * fname2 )
 	}
 
 	if( !strcmp( buf1, buf2 ) ) {
-		return true;
+		return 1;
 	}
-	return false;
+	return 0;
 }
 
-bool get_fname( char * fname, int lim ) 
+int get_fname( char * fname, int lim ) 
 {
 	for(;;) {
 		char c;
 		if( (c = getchar()) == EOF ) {
-			return false;
+			return 0;
 		}
 		ungetc( c, stdin );
 		if( get_line( fname, lim ) == 0 ) {
@@ -65,15 +65,15 @@ bool get_fname( char * fname, int lim )
 			continue;
 		}
 		else 
-			return true;
+			return 1;
 	}
 }
 
-bool close_file( FILE ** fp )
+int close_file( FILE ** fp )
 {
 	if( !fp || !*fp || fclose( *fp ) == EOF ) {
-		return false;
+		return 0;
 	}
 	*fp = NULL;
-	return true;
+	return 1;
 }
