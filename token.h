@@ -41,6 +41,7 @@ typedef enum {
 	COLON       ,
 	QUESTION    ,
 
+	EOL_TOK     ,
 	EOF_TOK     ,
 	
 	NUM_TOKEN_TYPES,

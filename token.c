@@ -28,8 +28,15 @@ Token get_token( char * ptr )
 {
 	Token tk = new_tok();
 
-	while( isspace( *ptr ) )
+	while( isspace( *ptr ) ) {
+		if( *ptr == '\n' ) {
+			tk.type = EOL_TOK;
+			tk.start = ptr;
+			tk.end = ptr + 1;
+			return tk;
+		}
 		++ptr;
+	}
 
 	/* preprocessor directive */
 	if( *ptr == '#' ) {
@@ -38,6 +45,14 @@ Token get_token( char * ptr )
 		
 		++ptr;
 		while( 1 ) {
+			if( (*ptr == '/' && ptr[1] == '*')
+			    || (*ptr == '/' && ptr[1] == '/') )
+			{
+				while( isspace( *--ptr ) );
+				tk.end = ptr + 1;
+				return tk;
+			}
+				
 			if( *ptr == '\0' || *ptr == EOF
 			    || (*ptr == '\n' && *(ptr-1) != '\\') )
 			{

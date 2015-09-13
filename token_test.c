@@ -48,6 +48,7 @@ const char * token_str[] =
     "COLON",
     "QUESTION",
 
+    "EOL_TOK",
     "EOF_TOK",
 
     "LAST_TOKEN_TYPE"
@@ -73,10 +74,21 @@ bool alloc_buffer( char * fname, FileBuf * buf )
 	return true;
 }
 
-
-void print_token( Token * tk, FILE * out )
+int how_much_eols( Token * tk )
 {
-	printf( "Type: %-11s @ ", token_str[tk->type] ); 
+	char *p = tk->start;
+	int eols = 0;
+	while( p != tk->end ) {
+		if( *p == '\n' ) 
+			++eols;
+		++p;
+	}
+	return eols;
+}
+
+void print_token( Token * tk, int cur_line, FILE * out )
+{
+	printf( "Line: %3d @ Type: %-11s @ ", cur_line, token_str[tk->type] ); 
 	const char * p = tk->start;
 	while( p != tk->end ) {
 		if( *p == ' ' )
@@ -113,6 +125,7 @@ int main()
 	
 	Token tk = new_tok();
 	puts( "Getting tokens" );
+	int cur_line = 1;
 	while( 1 ) {
 		tk = get_token( buf.head );
 		if( tk.type == NOTOKEN ) {
@@ -120,7 +133,18 @@ int main()
 			break;
 		}
 		buf.head = tk.end;
-		print_token( &tk, stdout );
+		if( tk.type != EOL_TOK )
+			print_token( &tk, cur_line, stdout );
+
+		if( tk.type == EOL_TOK ) {
+			++cur_line;
+		}
+		if( tk.type == PREPROC
+		    || tk.type == MUL_COMMENT
+		    || tk.type == STR_LIT )
+		{
+			cur_line += how_much_eols( &tk );
+		}
 	}
 	
 	return 0;

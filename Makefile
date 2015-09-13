@@ -16,4 +16,4 @@ token.o: token.c token.h
 cformat.o: cformat.c 
 	gcc -g -Wall -c cformat.c
 clean:
-	rm cformat *.o
+	rm cformat token_test *.o
