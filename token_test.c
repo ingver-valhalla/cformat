@@ -16,35 +16,38 @@ const char * token_str[] =
     "PREPROC",
     "MUL_COMMENT",
     "COMMENT",
-    
+
     "IF_KW",
     "ELSE_KW",
     "FOR_KW",
     "WHILE_KW",
     "DO_KW",
-    
+    "SWITCH_KW",
+    "CASE_KW",
+    "DEFAULT_KW",
+
     "IDENT",
     "NUM_CONST",
     "CHR_LIT",
     "STR_LIT",
-    
+
     "LPAREN",
     "RPAREN",
     "LBRACE",
     "RBRACE",
     "LBRACKET",
     "RBRACKET",
-    
+
     "ASSIGN_OP",
     "OP",
     "ELLIPSIS",
     "STRUCT_SEP",
-    
+
     "COMMA",
     "SEMICOLON",
     "COLON",
     "QUESTION",
-    
+
     "EOF_TOK",
 
     "LAST_TOKEN_TYPE"

@@ -27,6 +27,6 @@ bool buf_to_file( FILE * fp, const FileBuf * buf );
 bool read_to_buf( FILE * fp, FileBuf * buf );
 
 /* free_fbuf: frees memory allocated for buffer */
-bool free_fbuf( FileBuf * buf );
+void free_fbuf( FileBuf * buf );
 
 #endif // BUF_H

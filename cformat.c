@@ -69,9 +69,9 @@ int main( int argc, char * argv[] )
 /**for debug****/
 		printf( "Arguments passed\n" ); 
 /***************/
-		strncmp( in_fname, argv[1], MAX_LINE );
+		strncpy( in_fname, argv[1], MAX_LINE );
 		in_fname[MAX_LINE - 1] = '\0';
-		strncmp( out_fname, argv[2], MAX_LINE );
+		strncpy( out_fname, argv[2], MAX_LINE );
 		out_fname[MAX_LINE - 1] = '\0';
 	}
 

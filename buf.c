@@ -54,7 +54,7 @@ bool read_to_buf( FILE * fp, FileBuf * buf )
 	return true;
 }
 
-bool free_fbuf( FileBuf * buf)
+void free_fbuf( FileBuf * buf)
 {
 	free( buf->dat );
 	buf->dat = NULL;

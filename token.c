@@ -110,6 +110,24 @@ Token get_token( char * ptr )
 		tk.start = ptr;
 		tk.end   = ptr + strlen( "do" );
 	}
+	/* switch keyword */
+	else if( first_word( ptr, "switch" ) ) {
+		tk.type  = SWITCH_KW;
+		tk.start = ptr;
+		tk.end   = ptr + strlen( "switch" );
+	}
+	/* case keyword */
+	else if( first_word( ptr, "case" ) ) {
+		tk.type  = CASE_KW;
+		tk.start = ptr;
+		tk.end   = ptr + strlen( "case" );
+	}
+	/* default keyword*/
+	else if( first_word( ptr, "default" ) ) {
+		tk.type  = DEFAULT_KW;
+		tk.start = ptr;
+		tk.end   = ptr + strlen( "default" );
+	}
 	/* identifier */
 	else if( isalpha( *ptr ) || *ptr == '_' ) {
 		tk.type  = IDENT;
@@ -219,7 +237,7 @@ Token get_token( char * ptr )
 		tk.start = ptr;
 		tk.end   = ptr + 1;
 	} 
-	/* assign operators */
+	/* assignment operators */
 	else if( (*ptr == '=' && ptr[1] != '=' )
 	         || (*ptr == '+' && ptr[1] == '=' )
 	         || (*ptr == '-' && ptr[1] == '=' ) 
@@ -254,7 +272,7 @@ Token get_token( char * ptr )
 	}
 	/* one-symbol operators */
 	else if( *ptr == '*' || *ptr == '/' 
-	         || *ptr == '+' || *ptr == '-'
+	         || *ptr == '+' || (*ptr == '-' && ptr[1] != '>' )
 	         || *ptr == '~' || *ptr == '!' 
 	         || *ptr == '&' || *ptr == '|' 
 	         || *ptr == '%' || *ptr == '^'

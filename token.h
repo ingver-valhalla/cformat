@@ -9,12 +9,15 @@ typedef enum {
 	PREPROC     ,
 	MUL_COMMENT ,
 	COMMENT     ,
-
+	
 	IF_KW       ,
 	ELSE_KW     ,
 	FOR_KW      ,
 	WHILE_KW    ,
 	DO_KW       ,
+	SWITCH_KW   ,
+	CASE_KW     ,
+	DEFAULT_KW  ,
 
 	IDENT       ,
 	NUM_CONST   ,
@@ -40,7 +43,7 @@ typedef enum {
 
 	EOF_TOK     ,
 	
-	NUM_TOKEN_TYPES
+	NUM_TOKEN_TYPES,
 } TokenType;
 
 /* Token points to group of chars in a buffer */
