@@ -63,17 +63,17 @@ void fail( char * msg )
 	exit( EXIT_FAILURE );
 }
 
-bool alloc_buffer( char * fname, FileBuf * buf )
+int alloc_buffer( char * fname, FileBuf * buf )
 {
 	struct stat fstat;
 	if( stat( fname, & fstat ) ) {
 		printf( "Unable to get stat of %s\n", fname );
-		return false;
+		return 0;
 	}
 	if( !alloc_fbuf( buf, fstat.st_size ) ) {
-		return false;
+		return 0;
 	}
-	return true;
+	return 1;
 }
 
 int how_much_eols( Token * tk )

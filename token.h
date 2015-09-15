@@ -54,10 +54,13 @@ typedef struct Token {
 	char       * end;
 } Token;
 
-/* new_tok: retruns initialized token */
+/* new_tok: returns initialized token */
 Token new_tok();
 
 /* get_token: searches token inside null-terminated string */
 Token get_token( char * str );
+
+/* push_token: writes token to file */
+int push_token( Token * tk, FILE * out );
 
 #endif // TOKEN_H

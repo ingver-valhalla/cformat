@@ -24,6 +24,17 @@ static int first_word( const char * src, const char * word )
 	       && *end != '_';
 }
 
+int push_token( Token * tk, FILE * out )
+{
+	char *p = tk->start;
+	while( p != tk->end ) {
+		if( putc( *p, out ) == EOF )
+			return 0;
+		++p;
+	}
+	return 1;
+}
+
 Token get_token( char * ptr )
 {
 	Token tk = new_tok();
