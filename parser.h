@@ -11,8 +11,8 @@ typedef struct parser {
 	FileBuf * buf;
 
 	struct parser_state {
-		int same_line; /* == 0 if in there is nothing in current line of 
-		                * output file, except whitespaces. == 1
+		int empty_line; /* == 1 if in there is nothing in current line of 
+		                * output file, except whitespaces. == 0
 		                * otherwise. */
 		TokenType prev_tk;
 		int cur_line;
