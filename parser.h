@@ -9,14 +9,14 @@
 #include "token.h"
 typedef struct parser {
 	FileBuf * buf;
-	int cur_line;
-	int brace_depth;
-	TokenType prev_tk;
 
 	struct parser_state {
 		int same_line; /* == 0 if in there is nothing in current line of 
 		                * output file, except whitespaces. == 1
 		                * otherwise. */
+		TokenType prev_tk;
+		int cur_line;
+		int brace_depth;
 	} state;
 } Parser;
 

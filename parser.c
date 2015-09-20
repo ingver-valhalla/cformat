@@ -6,15 +6,15 @@
 static void reset_parser_state( Parser * p )
 {
 	p->state.same_line = 0;
+	p->state.cur_line    = 1;
+	p->state.brace_depth = 0;
+	p->state.prev_tk     = NOTOKEN;
 }
 
 Parser new_parser()
 {
 	Parser p;
-	p.buf         = NULL;
-	p.cur_line    = 1;
-	p.brace_depth = 0;
-	p.prev_tk     = NOTOKEN;
+	p.buf = NULL;
 
 	reset_parser_state( &p );
 
@@ -52,6 +52,311 @@ static int handle_token_if_kw( Token * tk, Parser * parser, FILE * out )
 {
 	if( !tk || !parser || !out )
 		return 0;
+	if( parser->state.prev_tk == ELSE_KW ) {
+		putc( ' ', out );	
+	}
+	else {
+		putc( '\n', out );
+	}       
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_else_kw( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_for_kw( Token * tk, Parser * parser, FILE * out ) 
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+	    return 0;
+	}
+	return 1;	    
+}
+static int handle_token_while_kw( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_do_kw( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_switch( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_case_kw( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_default_kw( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_ident( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_num_const( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_chr_lit( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_str_lit( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_lparen( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_rparen( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_lbrace( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_rbrace( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_lbracket( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_rbracket( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_assign_op( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_op( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_ellipsis( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_struct_sep( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_comma( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_semicolon( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_colon( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_question( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_eol( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_token_eof( Token * tk, Parser * parser, FILE * out )
+{
+	if( !tk || !parser || !out )
+		return 0;
+	putc( '\n', out );
+	if( !push_token( tk, out ) ) {
+		return 0;
+	}
 	return 1;
 }
 
