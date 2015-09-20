@@ -60,7 +60,4 @@ Token new_tok();
 /* get_token: searches token inside null-terminated string */
 Token get_token( char * str );
 
-/* push_token: writes token to file */
-int push_token( Token * tk, FILE * out );
-
 #endif // TOKEN_H

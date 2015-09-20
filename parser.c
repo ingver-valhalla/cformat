@@ -21,6 +21,17 @@ Parser new_parser()
 	return p;
 }
 
+static int push_token( Token * tk, FILE * out )
+{
+	char *p = tk->start;
+	while( p != tk->end ) {
+		if( putc( *p, out ) == EOF )
+			return 0;
+		++p;
+	}
+	return 1;
+}
+
 static int handle_token_mcomment( Token * tk, Parser * parser, FILE * out )
 {
 	if( !tk || !parser || !out )
@@ -31,6 +42,7 @@ static int handle_token_mcomment( Token * tk, Parser * parser, FILE * out )
 	}
 	if( !push_token( tk, out ) ) 
 		return 0;
+	parser->state.prev_tk = MUL_COMMENT;
 	return 1;
 }
 
@@ -43,7 +55,7 @@ static int handle_token_comment( Token * tk, Parser * parser, FILE * out )
 	}
 	if( !push_token( tk, out ) )
 		return 0;
-
+	parser->state.prev_tk = COMMENT;
 	return 1;
 }
 
@@ -57,10 +69,12 @@ static int handle_token_if_kw( Token * tk, Parser * parser, FILE * out )
 	}
 	else {
 		putc( '\n', out );
+		parser->state.same_line = 0;
 	}       
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = IF_KW;
 	return 1;
 }
 
@@ -72,6 +86,7 @@ static int handle_token_else_kw( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = ELSE_KW;
 	return 1;
 }
 
@@ -83,6 +98,7 @@ static int handle_token_for_kw( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 	    return 0;
 	}
+	parser->state.prev_tk = FOR_KW;
 	return 1;	    
 }
 static int handle_token_while_kw( Token * tk, Parser * parser, FILE * out )
@@ -90,9 +106,11 @@ static int handle_token_while_kw( Token * tk, Parser * parser, FILE * out )
 	if( !tk || !parser || !out )
 		return 0;
 	putc( '\n', out );
+	parser->state.same_line = 0;
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = WHILE_KW;
 	return 1;
 }
 
@@ -104,10 +122,11 @@ static int handle_token_do_kw( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = DO_KW;
 	return 1;
 }
 
-static int handle_token_switch( Token * tk, Parser * parser, FILE * out )
+static int handle_token_switch_kw( Token * tk, Parser * parser, FILE * out )
 {
 	if( !tk || !parser || !out )
 		return 0;
@@ -115,6 +134,7 @@ static int handle_token_switch( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = SWITCH_KW;
 	return 1;
 }
 
@@ -126,6 +146,7 @@ static int handle_token_case_kw( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = CASE_KW;
 	return 1;
 }
 
@@ -137,6 +158,7 @@ static int handle_token_default_kw( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = DEFAULT_KW;
 	return 1;
 }
 
@@ -148,6 +170,7 @@ static int handle_token_ident( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = IDENT;
 	return 1;
 }
 
@@ -159,6 +182,7 @@ static int handle_token_num_const( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = NUM_CONST;
 	return 1;
 }
 
@@ -170,6 +194,7 @@ static int handle_token_chr_lit( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = CHR_LIT;
 	return 1;
 }
 
@@ -181,6 +206,7 @@ static int handle_token_str_lit( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = STR_LIT;
 	return 1;
 }
 
@@ -192,6 +218,7 @@ static int handle_token_lparen( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = LPAREN;
 	return 1;
 }
 
@@ -203,6 +230,7 @@ static int handle_token_rparen( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = RPAREN;
 	return 1;
 }
 
@@ -214,6 +242,7 @@ static int handle_token_lbrace( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = LBRACE;
 	return 1;
 }
 
@@ -225,6 +254,7 @@ static int handle_token_rbrace( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = RBRACE;
 	return 1;
 }
 
@@ -236,6 +266,7 @@ static int handle_token_lbracket( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = LBRACKET;
 	return 1;
 }
 
@@ -247,6 +278,7 @@ static int handle_token_rbracket( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = RBRACKET;
 	return 1;
 }
 
@@ -258,6 +290,7 @@ static int handle_token_assign_op( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = ASSIGN_OP;
 	return 1;
 }
 
@@ -270,6 +303,7 @@ static int handle_token_op( Token * tk, Parser * parser, FILE * out )
 		return 0;
 	}
 	return 1;
+	parser->state.prev_tk = OP;
 }
 
 static int handle_token_ellipsis( Token * tk, Parser * parser, FILE * out )
@@ -280,6 +314,7 @@ static int handle_token_ellipsis( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = ELLIPSIS;
 	return 1;
 }
 
@@ -291,6 +326,7 @@ static int handle_token_struct_sep( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = STRUCT_SEP;
 	return 1;
 }
 
@@ -302,6 +338,7 @@ static int handle_token_comma( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = COMMA;
 	return 1;
 }
 
@@ -313,6 +350,7 @@ static int handle_token_semicolon( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = SEMICOLON;
 	return 1;
 }
 
@@ -324,6 +362,7 @@ static int handle_token_colon( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = COLON;
 	return 1;
 }
 
@@ -335,6 +374,7 @@ static int handle_token_question( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = QUESTION;
 	return 1;
 }
 
@@ -346,6 +386,7 @@ static int handle_token_eol( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = EOL_TOK;
 	return 1;
 }
 
@@ -357,6 +398,7 @@ static int handle_token_eof( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
+	parser->state.prev_tk = EOF_TOK;
 	return 1;
 }
 
