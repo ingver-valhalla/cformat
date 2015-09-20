@@ -28,6 +28,8 @@
 *.x86_64
 *.hex
 cformat
+test_token
+test_parser
 
 # Debug files
 *.dSYM/
