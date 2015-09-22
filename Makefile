@@ -26,4 +26,4 @@ cformat.o: cformat.c
 	gcc -g -Wall -c cformat.c
 
 clean:
-	rm cformat test_token *.o
+	rm cformat test_token test_parser *.o
