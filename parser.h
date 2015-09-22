@@ -11,10 +11,14 @@ typedef struct parser {
 	FileBuf * buf;
 
 	struct parser_state {
+		Token prev_tk;
+
+		/* bools */ 
 		int empty_line; /* == 1 if in there is nothing in current line of 
 		                * output file, except whitespaces. == 0
 		                * otherwise. */
-		TokenType prev_tk;
+		int un_op;
+
 		int cur_line;
 		int brace_depth;
 	} state;
