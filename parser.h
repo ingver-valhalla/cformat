@@ -12,6 +12,7 @@ typedef struct parser {
 
 	struct parser_state {
 		Token prev_tk;
+		Token prev_nonwhite_tk;
 
 		/* bools */ 
 		int empty_line; /* == 1 if in there is nothing in current line of 
@@ -24,6 +25,7 @@ typedef struct parser {
 		int cur_line;
 		int paren_depth;
 		int indent;
+		int last_brace_indent;
 		int of_1l_branches; /* track the amount of one line 
 		                         * branches */
 	} state;
