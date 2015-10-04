@@ -18,9 +18,14 @@ typedef struct parser {
 		                * output file, except whitespaces. == 0
 		                * otherwise. */
 		int un_op;
+		int in_branch;
+		/* ----- */
 
 		int cur_line;
-		int brace_depth;
+		int paren_depth;
+		int indent;
+		int of_1l_branches; /* track the amount of one line 
+		                         * branches */
 	} state;
 } Parser;
 
