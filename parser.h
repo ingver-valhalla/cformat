@@ -25,7 +25,9 @@ typedef struct parser {
 		int cur_line;
 		int paren_depth;
 		int indent;
-		int last_brace_indent;
+		int * brace_indent;    /* stack of brace indents */
+		int stack_size;
+		int last_brace_indent; /* top of stack */
 		int of_1l_branches; /* track the amount of one line 
 		                         * branches */
 	} state;
