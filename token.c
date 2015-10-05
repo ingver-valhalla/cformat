@@ -31,8 +31,8 @@ int is_unary_op( Token * tk )
 {
 	char *op = tk->start;
 	if( (*op == '&' && op[1] != '&')
-	    || (*op == '-' && op[1] != '-')
-	    || (*op == '+' && op[1] != '+')
+	    || (*op == '-' && op[1] == '-')
+	    || (*op == '+' && op[1] == '+')
 	    || *op == '*' || *op == '~' || *op == '!' 
 	    || is_incr_or_decr( tk ) )
 	{
