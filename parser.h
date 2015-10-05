@@ -8,35 +8,32 @@
 #include "buf.h"
 #include "token.h"
 typedef struct parser {
-	FileBuf * buf;
+	Token prev_tk;
+	Token prev_nonwhite_tk;
 
-	struct parser_state {
-		Token prev_tk;
-		Token prev_nonwhite_tk;
+	/* bools */ 
+	int empty_line; /* == 1 if in there is nothing in current line of 
+		        * output file, except whitespaces. == 0
+		        * otherwise. */
+	int un_op;
+	int in_branch;
+	int parens_closed;
+	//int in_case;
+	/* ----- */
 
-		/* bools */ 
-		int empty_line; /* == 1 if in there is nothing in current line of 
-		                * output file, except whitespaces. == 0
-		                * otherwise. */
-		int un_op;
-		int in_branch;
-		/* ----- */
-
-		int cur_line;
-		int paren_depth;
-		int indent;
-		int * brace_indent;    /* stack of brace indents */
-		int stack_size;
-		int last_brace_indent; /* top of stack */
-		int of_1l_branches; /* track the amount of one line 
-		                         * branches */
-	} state;
+	int cur_line;
+	int paren_depth;
+	int indent;
+	int * brace_indent;    /* stack of brace indents */
+	int stack_size;
+	int last_brace_indent; /* top of stack */
+	
 } Parser;
 
 /* new_parser: returns initialized Parser */
 Parser new_parser();
 
 /* parse: parsing and writing into file*/
-int parse( Parser * parser, FILE * out );
+int parse( Parser * parser, FileBuf * buf,FILE * out );
 
 #endif // PARSER_H
