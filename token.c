@@ -29,7 +29,6 @@ int is_unary_op( Token * tk )
 	char *op = tk->start;
 	if( (*op == '&' && op[1] != '&')
 	    || (*op == '|' && op[1] != '|')
-	    || is_incr_or_decr( tk )
 	    || *op == '*' || *op == '~' || *op == '!'
 	    || ((tk->start[0] == '+' || tk->start[0] == '-')
 	        && !is_incr_or_decr( tk )) )
@@ -170,7 +169,9 @@ Token get_token( char * ptr )
 		tk.end   = ptr + strlen( "default" );
 	}
 	/* identifier */
-	else if( isalpha( *ptr ) || *ptr == '_' ) {
+	else if( (isalpha( *ptr ) || *ptr == '_')
+	         && !(*ptr == 'L' && ptr[1] == '\'') ) 
+	{
 		tk.type  = IDENT;
 		tk.start = ptr;
 
@@ -186,17 +187,24 @@ Token get_token( char * ptr )
 		tk.start = ptr;
 
 		++ptr;
+		int met_e = 0;
 		/* Don't care much about syntax correctness */
-		while( isxdigit( *ptr ) || *ptr == '.' 
-		       || *ptr == '+' || *ptr == '-' )
+		while( isxdigit( *ptr ) || *ptr == '.' || *ptr == 'x'
+		       || ((*ptr == '+' || *ptr == '-') && met_e) )
+		{
+			if( *ptr == 'e')
+				met_e = 1;
 			++ptr;
-		
+		}
 		tk.end = ptr;
 	}
 	/* char literal */
-	else if( *ptr == '\'' ) {
+	else if( *ptr == '\''
+	         || (*ptr == 'L' && ptr[1] == '\'')) 
+	{
 		tk.type  = CHR_LIT;
 		tk.start = ptr;
+		if( *ptr == 'L' ) ++ptr;
 
 		/* if found '\'' or '\\' literal */
 		if( ptr[1] == '\\' && (ptr[2] == '\'' || ptr[2] == '\\') 
