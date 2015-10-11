@@ -20,7 +20,6 @@ Parser new_parser()
 	p.un_op             = 0;
 	p.in_branch         = 0;
 	p.parens_closed     = 1;
-	/*p.in_case           = 0;*/
 	p.cur_line          = 1;
 	p.paren_depth       = 0;
 	p.indent            = 0;
@@ -159,7 +158,6 @@ static int handle_token_case_kw( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) )
 		return 0;
 	parser->empty_line = 0;
-	/*parser->in_case = 1;*/
 	++parser->indent;
 	if( parser->un_op )
 		parser->un_op = 0;
@@ -438,29 +436,6 @@ static int handle_token_lbracket( Token * tk, Parser * parser, FILE * out )
 	return 1;
 }
 
-static int handle_token_rbracket( Token * tk, Parser * parser, FILE * out )
-{
-	if( !tk || !parser || !out )
-		return 0;
-	if( parser->empty_line
-	    && !push_indent( parser->indent, out ))
-		return 0;
-	if( parser->in_branch
-	    && parser->paren_depth
-	    && parser->empty_line ) 
-	{
-		int i;
-		for( i = 4; i > 0; --i )
-			putc( ' ', out );
-	}
-	if( !push_token( tk, out ) )
-		return 0;
-	parser->empty_line = 0;
-	if( parser->un_op )
-		parser->un_op = 0;
-	return 1;
-}
-
 static int handle_token_assign_op( Token * tk, Parser * parser, FILE * out )
 {
 	if( !tk || !parser || !out )
@@ -575,29 +550,6 @@ static int handle_token_struct_sep( Token * tk, Parser * parser, FILE * out )
 	return 1;
 }
 
-static int handle_token_comma( Token * tk, Parser * parser, FILE * out )
-{
-	if( !tk || !parser || !out )
-		return 0;
-	if( parser->empty_line
-	    && !push_indent( parser->indent, out ))
-		return 0;
-	if( parser->in_branch
-	    && parser->paren_depth
-	    && parser->empty_line ) 
-	{
-		int i;
-		for( i = 4; i > 0; --i )
-			putc( ' ', out );
-	}
-	if( !push_token( tk, out ) )
-		return 0;
-	parser->empty_line = 0;
-	if( parser->un_op )
-		parser->un_op = 0;
-	return 1;
-}
-
 static int handle_token_semicolon( Token * tk, Parser * parser, FILE * out )
 {
 	if( !tk || !parser || !out )
@@ -634,30 +586,6 @@ static int handle_token_colon( Token * tk, Parser * parser, FILE * out )
 		return 0;
 	if( parser->prev_tk.type != EOL_TOK )
 		putc( ' ', out );
-	if( parser->empty_line
-	    && !push_indent( parser->indent, out ))
-		return 0;
-	if( parser->in_branch
-	    && parser->paren_depth
-	    && parser->empty_line ) 
-	{
-		int i;
-		for( i = 4; i > 0; --i )
-			putc( ' ', out );
-	}
-	if( !push_token( tk, out ) )
-		return 0;
-	parser->empty_line = 0;
-	if( parser->un_op )
-		parser->un_op = 0;
-	return 1;
-}
-
-static int handle_token_question( Token * tk, Parser * parser, FILE * out )
-{
-	if( !tk || !parser || !out )
-		return 0;
-	putc( ' ', out );
 	if( parser->empty_line
 	    && !push_indent( parser->indent, out ))
 		return 0;
@@ -739,11 +667,10 @@ static int handle_token( Token * tk, Parser * parser, FILE * out)
 	else if( tk->type == RBRACE ) {
 		return handle_token_rbrace( tk, parser, out );
 	}
-	else if( tk->type == LBRACKET ) {
+	else if( tk->type == LBRACKET
+	         || tk->type == RBRACKET )
+	{
 		return handle_token_lbracket( tk, parser, out );
-	}
-	else if( tk->type == RBRACKET ) {
-		return handle_token_rbracket( tk, parser, out );
 	}
 	else if( tk->type == ASSIGN_OP ) {
 		return handle_token_assign_op( tk, parser, out );
@@ -754,20 +681,18 @@ static int handle_token( Token * tk, Parser * parser, FILE * out)
 	else if( tk->type == ELLIPSIS ) {
 		return handle_token_ellipsis( tk, parser, out );
 	}
-	else if( tk->type == STRUCT_SEP ) {
+	else if( tk->type == STRUCT_SEP
+	         || tk->type == COMMA )
+	{
 		return handle_token_struct_sep( tk, parser, out );
-	}
-	else if( tk->type == COMMA ) {
-		return handle_token_comma( tk, parser, out );
 	}
 	else if( tk->type == SEMICOLON ) {
 		return handle_token_semicolon( tk, parser, out );
 	}
-	else if( tk->type == COLON ) {
+	else if( tk->type == COLON
+	         || tk->type == QUESTION )
+	{
 		return handle_token_colon( tk, parser, out );
-	}
-	else if( tk->type == QUESTION ) {
-		return handle_token_question( tk, parser, out );
 	}
 	else if( tk->type == EOL_TOK ) {
 		return handle_token_eol( tk, parser, out );
