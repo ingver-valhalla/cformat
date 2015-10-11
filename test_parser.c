@@ -107,7 +107,7 @@ int main()
 	FILE * in;
 	FILE * out;
 	char * in_fname = "example.c";
-	char * out_fname = "out.txt";
+	char * out_fname = "result.c";
 	if( !open_file( &in, in_fname, "r" ) ) {
 		fail( "Couldn't open input" );
 	}
@@ -127,31 +127,13 @@ int main()
 	}
 
 	Parser parser = new_parser();
-	parser.buf = &buf;
 	puts( "Created parser" );
 
 	puts( "Parsing..." );
-	parse( &parser, out );
-	/*while( 1 ) {*/
-		/*tk = get_token( buf.head );*/
-		/*if( tk.type == NOTOKEN ) {*/
-			/*printf( "Got no token\n" );*/
-			/*break;*/
-		/*}*/
-		/*buf.head = tk.end;*/
-		/*if( tk.type != EOL_TOK )*/
-			/*print_token( &tk, cur_line, stdout );*/
-
-		/*if( tk.type == EOL_TOK ) {*/
-			/*++cur_line;*/
-		/*}*/
-		/*if( tk.type == PREPROC*/
-		    /*|| tk.type == MUL_COMMENT*/
-		    /*|| tk.type == STR_LIT )*/
-		/*{*/
-			/*cur_line += how_much_eols( &tk );*/
-		/*}*/
-	/*}*/
+	if( !parse( &parser, &buf, out ) )
+		printf( "Error occured while parsing\n"
+		        "Current line: %d\n",
+		        parser.cur_line );
 
 	close_file( &in );
 	close_file( &out );
