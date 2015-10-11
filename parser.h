@@ -18,6 +18,7 @@ typedef struct parser {
 	int un_op;
 	int in_branch;
 	int parens_closed;
+	int prev_closing_paren;
 	/* ----- */
 
 	int cur_line;
