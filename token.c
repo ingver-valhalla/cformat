@@ -16,13 +16,23 @@ Token new_tok()
 	return tk;
 }
 
+int is_incr_or_decr( Token *tk )
+{
+	if( (tk->start[0] == '+' && tk->start[1] == '+')
+	    || (tk->start[0] == '-' && tk->start[1] == '-') )
+		return 1;
+	return 0;
+}
+
 int is_unary_op( Token * tk )
 {
 	char *op = tk->start;
 	if( (*op == '&' && op[1] != '&')
-	    || (*op == '-' && op[1] == '-')
-	    || (*op == '+' && op[1] == '+')
-	    || *op == '*' || *op == '~' || *op == '!' )
+	    || (*op == '|' && op[1] != '|')
+	    || is_incr_or_decr( tk )
+	    || *op == '*' || *op == '~' || *op == '!'
+	    || ((tk->start[0] == '+' || tk->start[0] == '-')
+	        && !is_incr_or_decr( tk )) )
 	{
 		return 1;
 	}
