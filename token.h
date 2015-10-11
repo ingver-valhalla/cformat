@@ -60,9 +60,6 @@ Token new_tok();
 /* is_unary_op: checks if token may be an unary operator */
 int is_unary_op( Token * tk );
 
-/* is_incr_or_decr: checks if token is increment of decrement */
-int is_incr_or_decr( Token * tk );
-
 /* get_token: searches token inside null-terminated string */
 Token get_token( char * str );
 
