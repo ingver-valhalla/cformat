@@ -134,9 +134,16 @@ int main()
 		printf( "Error occured while parsing\n"
 		        "Current line: %d\n",
 		        parser.cur_line );
+	if( !free_fbuf( &buf ) )
+		fail( "Couldn't free buffer" );
+	puts( "Freed buffer" );
+	if( !free_parser( &parser ) )
+		fail( "Couldn't free parser" );
+	puts( "Freed parser" );
 
 	close_file( &in );
 	close_file( &out );
 	
+	puts( "Exiting" );
 	return 0;
 }

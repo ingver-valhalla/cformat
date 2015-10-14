@@ -107,9 +107,6 @@ int main()
 	FILE *fp = NULL;
 	char * fname;
 	fname = "example.c";
-	/*fname = (char *)malloc( 100 );*/
-	/*printf( "Input file: " );*/
-	/*get_line( fname, 100 );*/
 	
 	if( !open_file( &fp, fname, "r" ) ) {
 		fail( "Couldn't open input" );
@@ -148,6 +145,11 @@ int main()
 			cur_line += how_much_eols( &tk );
 		}
 	}
+
+	if( !free_fbuf( &buf ) )
+		fail( "Couldn't free buffer" );
+	puts( "Freed buffer" );
 	
+	puts( "Exiting" );
 	return 0;
 }
