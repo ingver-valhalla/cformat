@@ -190,7 +190,8 @@ Token get_token( char * ptr )
 		int met_e = 0;
 		/* Don't care much about syntax correctness */
 		while( isxdigit( *ptr ) || *ptr == '.' || *ptr == 'x'
-		       || ((*ptr == '+' || *ptr == '-') && met_e) )
+		       || ((*ptr == '+' || *ptr == '-') && met_e)
+		       || *ptr == 'u' || *ptr == 'l' )
 		{
 			if( *ptr == 'e')
 				met_e = 1;
