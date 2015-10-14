@@ -5,9 +5,9 @@
 #include <string.h>
 #include <sys/stat.h>
 #include "in_out.h"
-#include "buf.h"
+#include "parser.h"
 
-#define DEBUG_ON
+//#define DEBUG_ON
 
 #define MAX_LINE 100
 
@@ -47,7 +47,7 @@ int main( int argc, char * argv[] )
 	char   out_fname[MAX_LINE];
 	char * second_fname; /* equals in_fname if one file passed */
 
-	FileBuf file_buffer = new_fbuf();
+	FileBuf buf = new_fbuf();
 	
 	if( argc == 1 ) {
 		/* Program called without arguments. 
@@ -97,17 +97,16 @@ int main( int argc, char * argv[] )
 		fail("Failed open file in \'r\' mode");
 	}
 
-	if( !alloc_buffer( in_fname, &file_buffer ) ) {
+	if( !alloc_buffer( in_fname, &buf ) ) {
 		fail( "Can't allocate memory for input file" );
 	}
-#ifndef DEBUG_ON
-	printf( "Allocated %lu bytes for %s\n", file_buffer.size, in_fname );
+#ifdef DEBUG_ON
+	printf( "Allocated %lu bytes for %s\n", buf.size, in_fname );
 #endif
 	
-	if( !read_to_buf( in_file, &file_buffer ) ) {
+	if( !read_to_buf( in_file, &buf ) ) {
 		fail( "Can't read input file" );
 	}
-	buf_to_file( stdout, &file_buffer );
 
 	if( !close_file( &in_file ) ) {
 		fail( "Error occured while closing file" );
@@ -116,11 +115,31 @@ int main( int argc, char * argv[] )
 	if( !open_file( second_file, second_fname, "w" ) ) {
 		fail("Failed open file in \'w\' mode");
 	}
+
+	Parser parser = new_parser();
 #ifdef DEBUG_ON
-	if( !buf_to_file( *second_file, &file_buffer ) ) {
-		fail( "Error occured while writing buffer to file" );
-	}
+	puts( "Created parser" );
+	puts( "Parsing..." );
 #endif
+	if( !parse( &parser, &buf, *second_file ) )
+		printf( "Error occured while parsing\n"
+		        "Current line: %d\n",
+		        parser.cur_line );
+	if( !free_fbuf( &buf ) )
+		fail( "Couldn't free buffer" );
+#ifdef DEBUG_ON
+	puts( "Freed buffer" );
+#endif
+	if( !free_parser( &parser ) )
+		fail( "Couldn't free parser" );
+#ifdef DEBUG_ON
+	puts( "Freed parser" );
+#endif
+	close_file( second_file );
+#ifdef DEBUG_ON
+	puts( "Exiting" );
+#endif
+
 	/* Ended processing a file. Returning */
 	return 0;
 }
