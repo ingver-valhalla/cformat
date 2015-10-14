@@ -33,6 +33,9 @@ typedef struct parser {
 /* new_parser: returns initialized Parser */
 Parser new_parser();
 
+/* free_parser: deletes parser */
+int free_parser( Parser * p );
+
 /* parse: parsing and writing into file*/
 int parse( Parser * parser, FileBuf * buf,FILE * out );
 
