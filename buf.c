@@ -32,6 +32,21 @@ int alloc_fbuf( FileBuf * buf, size_t size )
 	return 1;
 }	
 
+int free_fbuf( FileBuf * buf )
+{
+	if( !buf ) return 0;
+
+	if( buf->dat ) {
+		free( buf->dat );
+		buf->dat = NULL;
+	}
+	buf->end = NULL;
+	buf->head = NULL;
+	buf->size = 0;
+	return 1;
+	
+}
+
 int buf_to_file( FILE * fp, const FileBuf * buf )
 {
 	if( !fp || !buf ) {
@@ -52,13 +67,4 @@ int read_to_buf( FILE * fp, FileBuf * buf )
 		return 0;
 	}
 	return 1;
-}
-
-void free_fbuf( FileBuf * buf)
-{
-	free( buf->dat );
-	buf->dat = NULL;
-	buf->end = NULL;
-	buf->head = NULL;
-	buf->size = 0;
 }

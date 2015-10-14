@@ -18,14 +18,14 @@ FileBuf new_fbuf();
 /* alloc_fbuf: allocates size bytes of memory for a file buffer */
 int alloc_fbuf( FileBuf * buf, size_t size );
 
+/* free_fbuf: frees memory allocated for buffer */
+int free_fbuf( FileBuf * buf );
+
 /* buf_to_file: writes FileBuf to file */
 int buf_to_file( FILE * fp, const FileBuf * buf );
 
 /* read_to_buf: reads size bytes from file to buffer.
  * Buffer is supposed to have allocated memory  */
 int read_to_buf( FILE * fp, FileBuf * buf );
-
-/* free_fbuf: frees memory allocated for buffer */
-void free_fbuf( FileBuf * buf );
 
 #endif // BUF_H
