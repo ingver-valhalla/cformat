@@ -2,7 +2,7 @@ OBJ = in_out.o buf.o token.o
 SOURCE = in_out.c cformat.c token.c
 
 cformat: $(OBJ) parser.o cformat.o 
-	gcc -g -o cformat $(OBJ) cformat.o
+	gcc -g -o cformat $(OBJ) parser.o cformat.o
 	
 test_token: $(OBJ) test_token.o
 	gcc -o test_token $(OBJ) test_token.o
