@@ -1,4 +1,4 @@
-// parser.c 
+// parser.c
 
 #include <stdlib.h>
 #include <string.h>
@@ -16,12 +16,10 @@ Parser new_parser()
 	Parser p;
 
 	p.prev_tk            = new_tok();
-	/*p.prev_nonwhite_tk   = new_tok();*/
 	p.empty_line         = 1;
 	p.un_op              = 0;
 	p.in_branch          = 0;
 	p.parens_closed      = 1;
-	/*p.prev_closing_paren = 0;*/
 	p.cur_line           = 1;
 	p.paren_depth        = 0;
 	p.indent             = 0;
@@ -46,7 +44,7 @@ int free_parser( Parser * p )
 	return 1;
 }
 
-static int enlarge_buffer( int ** buf, int * cur_size )
+static int enlarge_stack( int ** buf, int * cur_size )
 {
 	if( !buf || !*buf || *cur_size < 0 )
 		return 0;
@@ -56,7 +54,7 @@ static int enlarge_buffer( int ** buf, int * cur_size )
 	*cur_size += 10;
 	return 1;
 }
-static int shrink_buffer( int ** buf, int * cur_size )
+static int shrink_stack( int ** buf, int * cur_size )
 {
 	if( !buf || !*buf || *cur_size < 10 )
 		return 0;
@@ -114,8 +112,7 @@ static int handle_token_comment( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) )
 		return 0;
 	parser->empty_line = 0;
-	if( parser->un_op )
-		parser->un_op = 0;
+	parser->un_op = 0;
 	return 1;
 }
 
@@ -127,14 +124,12 @@ static int handle_token_cond( Token * tk, Parser * parser, FILE * out )
 	if( tk->type == IF_KW && parser->prev_tk.type == ELSE_KW ) {
 		putc( ' ', out );	
 	}
-	/*else if( parser->prev_tk.type != EOL_TOK ) {*/
 	else if( !parser->empty_line ) {
 		putc( '\n', out );
 		parser->empty_line = 1;
 	}
 	if( parser->in_branch
-		/*&& parser->prev_nonwhite_tk.type != ELSE_KW) */
-		&& parser->prev_tk.type != ELSE_KW )
+	    && parser->prev_tk.type != ELSE_KW )
 	{
 		++parser->indent;
 	}
@@ -148,6 +143,7 @@ static int handle_token_cond( Token * tk, Parser * parser, FILE * out )
 	}
 	
 	if( parser->prev_tk.type != ELSE_KW
+	    && parser->empty_line
 	    && !push_indent( parser->indent, out ) )
 		return 0;
 
@@ -155,9 +151,7 @@ static int handle_token_cond( Token * tk, Parser * parser, FILE * out )
 		return 0;
 
 	parser->empty_line = 0;
-	if( parser->un_op )
-		parser->un_op = 0;
-	/*parser->prev_closing_paren = 0;*/
+	parser->un_op = 0;
 	return 1;
 }
 
@@ -165,22 +159,23 @@ static int handle_token_case_kw( Token * tk, Parser * parser, FILE * out )
 {
 	if( !tk || !parser || !out )
 		return 0;
-	//if( parser->prev_tk.type != EOL_TOK ) {
 	if( !parser->empty_line ) {
 		putc( '\n', out );
 		parser->empty_line = 1;
 	}
+
 	parser->indent = parser->brace_indent[parser->last_brace_indent];
+
 	if( parser->empty_line
 	    && !push_indent( parser->indent, out ))
 		return 0;
+
 	if( !push_token( tk, out ) )
 		return 0;
+
 	parser->empty_line = 0;
 	++parser->indent;
-	if( parser->un_op )
-		parser->un_op = 0;
-	/*parser->prev_closing_paren = 0;*/
+	parser->un_op = 0;
 	return 1;
 }
 
@@ -188,33 +183,28 @@ static int handle_token_ident( Token * tk, Parser * parser, FILE * out )
 {
 	if( !tk || !parser || !out )
 		return 0;
-#ifdef DEBUG_ON
-	/*if( parser->un_op )
-		 putc( '@', out );
-	else
-		 putc( '#', out );*/
-#endif
-	if( !parser->in_branch
-	    && !parser->empty_line
-	    && (parser->prev_tk.type == LBRACE
-	        || parser->prev_tk.type == SEMICOLON ) )
-	{
-		putc('\n', out );
-		parser->empty_line = 1;
+
+	if( !parser->in_branch ) {
+
+		if( !parser->empty_line ) {
+
+			if( parser->prev_tk.type == LBRACE
+			    || parser->prev_tk.type == SEMICOLON )
+			{
+				putc( '\n', out );
+				parser->empty_line = 1;
+			}
+			else if( parser->prev_tk.type != LPAREN
+			         && parser->prev_tk.type != LBRACKET
+			         && parser->prev_tk.type != STRUCT_SEP
+			         && !parser->un_op )
+			{
+				putc( ' ', out );
+			}
+		}
 	}
-	/* putting space before token if needed */
-	else if( !parser->empty_line
-	         && parser->prev_tk.type != LPAREN
-	         && parser->prev_tk.type != LBRACKET
-	         && parser->prev_tk.type != STRUCT_SEP
-	         //&& parser->prev_tk.type != EOL_TOK
-	         && !parser->un_op )
-	{
-		putc( ' ', out );
-	} 
-	if( parser->in_branch
-	    && parser->parens_closed )
-	{
+	else if( parser->parens_closed ) {
+
 		if( parser->prev_tk.type == RPAREN
 		    && !parser->empty_line )
 		{
@@ -224,9 +214,15 @@ static int handle_token_ident( Token * tk, Parser * parser, FILE * out )
 		parser->in_branch = 0;
 		++parser->indent;
 	}
+
+
 	if( parser->empty_line
 	    && !push_indent( parser->indent, out ) )
+	{
 		return 0;
+	}
+
+
 	if( parser->in_branch
 	    && !parser->parens_closed
 	    && parser->empty_line ) 
@@ -236,13 +232,12 @@ static int handle_token_ident( Token * tk, Parser * parser, FILE * out )
 			putc( ' ', out );
 	}
 		
+
 	if( !push_token( tk, out ) )
 		return 0;
+
 	parser->empty_line = 0;
-	parser->prev_tk.type = IDENT;
-	if( parser->un_op )
-		parser->un_op = 0;
-	/*parser->prev_closing_paren = 0;*/
+	parser->un_op = 0;
 	return 1;
 }
 
@@ -251,49 +246,38 @@ static int handle_token_lparen( Token * tk, Parser * parser, FILE * out )
 	if( !tk || !parser || !out )
 		return 0;
 	
-	// --------------------------
-	// parser->parens_closed == 0
-	if( !parser->parens_closed )
-		++parser->paren_depth;
+	if( parser->in_branch ) {
 
-	if( parser->empty_line
-	    && !parser->parens_closed )
-	{
-		if( !push_indent( parser->indent, out ) )
-			return 0;
-		int i;
-		for( i = 4; i > 0; --i )
-			putc( ' ', out );
-	}
-	// --------------------------
+		if( parser->parens_closed ) {
 
+			if( !parser->empty_line ) {
+				putc( '\n', out );
+				parser->empty_line = 1;
+			}
+			++parser->indent;
 
-	// --------------------------
-	// parser->parens_closed == 1
-	if( parser->in_branch
-	    && parser->parens_closed )
-	{
-		if( !parser->empty_line
-		    && parser->prev_tk.type == RPAREN )
-		{
-			putc( '\n', out );
-			parser->empty_line = 1;
+			if( !push_indent( parser->indent, out ) )
+				return 0;
+			parser->in_branch = 0;
 		}
-		++parser->indent;
+		else {
+			++parser->paren_depth;
 
-		if( !push_indent( parser->indent, out ) )
-			return 0;
-		// didn't set parser->in_branch to 0, because next if will execute
+			if( parser->empty_line ) {
+
+				if( !push_indent( parser->indent, out ) )
+					return 0;
+
+				int i;
+				for( i = 4; i > 0; --i )
+					putc( ' ', out );
+			}
+		}
 	}
-	// --------------------------
-	
-
-	// ----------------------
-	// parser->in_branch == 0
-	if( !parser->in_branch
-		/*&& parser->empty_line*/ )
+	else
 	{
 		if( !parser->empty_line ) {
+
 			if( parser->prev_tk.type == LBRACE
 			    || parser->prev_tk.type == RBRACE
 			    || parser->prev_tk.type == SEMICOLON )
@@ -302,21 +286,14 @@ static int handle_token_lparen( Token * tk, Parser * parser, FILE * out )
 				parser->empty_line = 1;
 			}
 		}
+
 		if( parser->empty_line
 		    && !push_indent( parser->indent, out ) )
 			return 0;
 	}
-	// ----------------------
 	
-	
-	// now resetting parser->in_branch
-	if( parser->in_branch
-	    && parser->parens_closed )
-		parser->in_branch = 0;
-
 	/* putting space before token if needed */
 	if( !parser->empty_line
-	    //&& parser->prev_tk.type != EOL_TOK
 	    && parser->prev_tk.type != LPAREN
 	    && parser->prev_tk.type != LBRACKET
 	    && parser->prev_tk.type != SEMICOLON
@@ -324,12 +301,12 @@ static int handle_token_lparen( Token * tk, Parser * parser, FILE * out )
 	{
 		putc( ' ', out );
 	}
+
 	if( !push_token( tk, out ) )
 		return 0;
+
 	parser->empty_line = 0;
-	if( parser->un_op )
-		parser->un_op = 0;
-	/*parser->prev_closing_paren = 0;*/
+	parser->un_op = 0;
 	return 1;
 }
 
@@ -338,49 +315,28 @@ static int handle_token_rparen( Token * tk, Parser * parser, FILE * out )
 	if( !tk || !parser || !out )
 		return 0;
 
-	// --------------------------
-	// parser->parens_closed == 0
 	if( parser->in_branch
 	    && !parser->parens_closed )
 	{
 		--parser->paren_depth;
-	}
-	/*if( parser->empty_line*/
-		/*&& !parser->parens_closed*/
-		/*&& !push_indent( parser->indent, out ))*/
-		/*return 0;*/
-	if( parser->in_branch
-	    && !parser->parens_closed
-	    && parser->empty_line ) 
-	{
-		int i;
-		for( i = 4; i > 0; --i )
-			putc( ' ', out );
-	}
-	// --------------------------
 
+		if( parser->paren_depth == 0 ) {
+			parser->parens_closed = 1;
+		}
 
-	// --------------------------
-	// parser->parens_closed == 1
-	/*if( parser->empty_line*/
-		/*&& parser->parens_closed*/
-		/*&& !push_indent( parser->indent, out ) )*/
-		/*return 0;*/
-	// --------------------------
- 
+		if( parser->empty_line ) {
+			int i;
+			for( i = 4; i > 0; --i )
+				putc( ' ', out );
+		}
+	}
 
 	if( !push_token( tk, out ) )
 		return 0;
-	parser->empty_line = 0;
 
-	if( parser->in_branch
-	    && !parser->paren_depth )
-	{
-		parser->parens_closed = 1;
-		/*parser->prev_closing_paren = 1;*/
-	}
-	if( parser->un_op )
-		parser->un_op = 0;
+	parser->empty_line = 0;
+	parser->un_op = 0;
+
 	return 1;
 }
 
@@ -388,14 +344,19 @@ static int handle_token_lbrace( Token * tk, Parser * parser, FILE * out )
 {
 	if( !tk || !parser || !out )
 		return 0;
+
 	++parser->last_brace_indent;
+
 	if( parser->last_brace_indent >= parser->stack_size
-	    && !enlarge_buffer( &(parser->brace_indent),
+	    && !enlarge_stack( &(parser->brace_indent),
 		                &(parser->stack_size)  ) )
+	{
 		return 0;	
+	}
+
 	parser->brace_indent[parser->last_brace_indent]
 		= parser->indent;
-	//if( parser->prev_tk.type != EOL_TOK 
+
 	if( !parser->empty_line 
 	    && parser->prev_tk.type != ASSIGN_OP )
 	{
@@ -403,26 +364,22 @@ static int handle_token_lbrace( Token * tk, Parser * parser, FILE * out )
 		parser->empty_line = 1;
 	}
 
-	/*if( parser->prev_tk.type != SEMICOLON*/
-		/*&& parser->prev_tk.type != EOL_TOK*/
-		/*&& !parser->prev_closing_paren)*/
-	// insert a space after '=' in array init
+	// insert a space after '=' in array initialization
 	if( parser->prev_tk.type == ASSIGN_OP )
 	{
 		putc( ' ', out );
 	}
+
 	if( !push_indent( parser->indent, out ) )
 		return 0;
 
 	if( !push_token( tk, out ) )
 		return 0;
-	parser->empty_line = 0;
 
+	parser->empty_line = 0;
 	parser->in_branch = 0;
 	++parser->indent;
-	if( parser->un_op )
-		parser->un_op = 0;
-	/*parser->prev_closing_paren = 0;*/
+	parser->un_op = 0;
 	return 1;
 }
 
@@ -430,35 +387,49 @@ static int handle_token_rbrace( Token * tk, Parser * parser, FILE * out )
 {
 	if( !tk || !parser || !out )
 		return 0;
+
 	int lbi = parser->brace_indent[parser->last_brace_indent];
 
-	//if( parser->prev_tk.type != EOL_TOK ) {
 	if( !parser->empty_line ) {
 		putc( '\n', out );
 		parser->empty_line = 1;
 	}
 	
 	parser->indent = lbi;
+
 	if( !push_indent( parser->indent, out ) )
+	{
 		return 0;
+	}
+
 	if( !push_token( tk, out ) )
+	{
 		return 0;
-	
+	}
+
 	--parser->last_brace_indent;
+
 	if( parser->last_brace_indent > 0
 	    && parser->last_brace_indent < parser->stack_size - 10
-	    && !shrink_buffer( &(parser->brace_indent),
+	    && !shrink_stack( &(parser->brace_indent),
 	                       &(parser->stack_size) ) )
+	{
 		return 0;
+	}
+
 	lbi = parser->brace_indent[parser->last_brace_indent];
+
 	if( !parser->last_brace_indent )
+	{
 		parser->indent = lbi;
+	}
 	else
+	{
 		parser->indent = lbi + 1;
+	}
+
 	parser->empty_line = 0;
-	if( parser->un_op )
-		parser->un_op = 0;
-	/*parser->prev_closing_paren = 0;*/
+	parser->un_op = 0;
 	return 1;
 }
 
@@ -466,11 +437,14 @@ static int handle_token_bracket( Token * tk, Parser * parser, FILE * out )
 {
 	if( !tk || !parser || !out )
 		return 0;
+
 	if( parser->empty_line
 	    && !push_indent( parser->indent, out ))
+	{
 		return 0;
+	}
+
 	if( parser->in_branch
-		/*&& parser->paren_depth*/
 	    && !parser->parens_closed
 	    && parser->empty_line ) 
 	{
@@ -478,12 +452,13 @@ static int handle_token_bracket( Token * tk, Parser * parser, FILE * out )
 		for( i = 4; i > 0; --i )
 			putc( ' ', out );
 	}
+
 	if( !push_token( tk, out ) )
 		return 0;
+
 	parser->empty_line = 0;
-	if( parser->un_op )
-		parser->un_op = 0;
-	/*parser->prev_closing_paren = 0;*/
+	parser->un_op = 0;
+
 	return 1;
 }
 
@@ -492,25 +467,24 @@ static int handle_token_assign_op( Token * tk, Parser * parser, FILE * out )
 	if( !tk || !parser || !out )
 		return 0;
 
-	if( !parser->empty_line)
-		putc( ' ', out );
+	if( parser->empty_line ) {
 
-	if( parser->empty_line
-	    && !push_indent( parser->indent, out ))
-		return 0;
-	if( parser->empty_line ) 
-	{
+		if( !push_indent( parser->indent, out ) )
+			return 0;
 		int i;
 		for( i = 4; i > 0; --i )
 			putc( ' ', out );
 	}
+	else {
+		putc( ' ', out );
+	}
 	    
 	if( !push_token( tk, out ) )
 		return 0;
+
 	parser->empty_line = 0;
-	if( parser->un_op )
-		parser->un_op = 0;
-	/*parser->prev_closing_paren = 0;*/
+	parser->un_op = 0;
+
 	return 1;
 }
 
@@ -519,106 +493,96 @@ static int handle_token_op( Token * tk, Parser * parser, FILE * out )
 	if( !tk || !parser || !out )
 		return 0;
 
-#ifdef DEBUG_ON
-	/*if( parser->un_op )
-		putc( '@', out );
-	else
-		putc( '#', out );
-	if( parser->prev_closing_paren )
-		putc( '$' , out );
-	if( parser->empty_line )
-		putc( '`', out );
-	if( parser->in_branch )
-		putc( '?', out );*/
-#endif
-
-	if( (is_incr_or_decr( tk ) 
-	     && !(parser->un_op
-		  || parser->prev_tk.type == LPAREN
-		  || parser->prev_tk.type == RPAREN
-		  || parser->prev_tk.type == LBRACKET
-		  || parser->prev_tk.type == RBRACKET
-		  || parser->prev_tk.type == IDENT
-		  || parser->prev_tk.type == NUM_CONST
-		  || parser->prev_tk.type == CHR_LIT
-		  || parser->prev_tk.type == STR_LIT)
-	    )
-	    || (!is_incr_or_decr( tk )
-		&& ((!is_unary_op( tk ) 
-		     && (parser->un_op
-			 || parser->prev_tk.type == RPAREN
-			 || parser->prev_tk.type == RBRACKET
-			 || parser->prev_tk.type == IDENT
-			 || parser->prev_tk.type == NUM_CONST
-			 || parser->prev_tk.type == CHR_LIT
-			 || parser->prev_tk.type == STR_LIT))
-		    || (is_unary_op( tk )
-			&& (!parser->un_op 
-			        || is_incr_or_decr( &(parser->prev_tk) ))
-			&& !(parser->prev_tk.type == LPAREN
-			     || parser->prev_tk.type == LBRACKET
-			     || (parser->prev_tk.start[0] == '*'
-			         && tk->start[0] == '*')))
-		   )
-	       )
-	  )
+	if( !parser->empty_line 
+	    && (!parser->in_branch || !parser->parens_closed) )
 	{
-		if( !parser->empty_line 
-		    && (!parser->in_branch
-		        || (!parser->parens_closed
-					/*&& !parser->prev_closing_paren*/)) )
+		if( is_incr_or_decr( tk ) ) {
+
+			if( !parser->un_op
+			    && parser->prev_tk.type != LPAREN
+			    && parser->prev_tk.type != RPAREN
+			    && parser->prev_tk.type != LBRACKET
+			    && parser->prev_tk.type != RBRACKET
+			    && parser->prev_tk.type != IDENT
+			    && parser->prev_tk.type != NUM_CONST
+			    && parser->prev_tk.type != CHR_LIT
+			    && parser->prev_tk.type != STR_LIT )
+			{
+				putc( ' ', out );
+			}
+		}
+		else if( is_unary_op( tk ) ) {
+
+			if( is_incr_or_decr( &(parser->prev_tk ) ) ) {
+				putc( ' ', out );
+			}
+			else if( !parser->un_op
+			         && parser->prev_tk.type != LPAREN
+			         && parser->prev_tk.type != LBRACKET
+			         && !(parser->prev_tk.start[0] == '*'
+			              && tk->start[0] == '*') )
+			{
+				putc( ' ', out );
+			}
+		}
+		else if( parser->un_op
+		         || parser->prev_tk.type == RPAREN
+		         || parser->prev_tk.type == RBRACKET
+		         || parser->prev_tk.type == IDENT
+		         || parser->prev_tk.type == NUM_CONST
+		         || parser->prev_tk.type == CHR_LIT
+		         || parser->prev_tk.type == STR_LIT)
+		{
 			putc( ' ', out );
+		}
 	}
 
 	/* find out if this is an unary op */
-	if( is_incr_or_decr( tk )
-	    || (is_unary_op( tk )
-	        && !is_incr_or_decr( &(parser->prev_tk) )
-			/*&& parser->prev_nonwhite_tk.type != IDENT*/
-			/*&& parser->prev_nonwhite_tk.type != NUM_CONST*/
-			/*&& parser->prev_nonwhite_tk.type != CHR_LIT*/
-			/*&& parser->prev_nonwhite_tk.type != STR_LIT*/
-			/*&& (parser->prev_nonwhite_tk.type != RPAREN*/
-				/*|| (parser->prev_nonwhite_tk.type == RPAREN*/
-	        && parser->prev_tk.type != IDENT
-	        && parser->prev_tk.type != NUM_CONST
-	        && parser->prev_tk.type != CHR_LIT
-	        && parser->prev_tk.type != STR_LIT
-	        && (parser->prev_tk.type != RPAREN
-	            || (parser->prev_tk.type == RPAREN
-	                && parser->in_branch
-					/*&& parser->prev_closing_paren*/ ))
-			/*&& parser->prev_nonwhite_tk.type != RBRACKET) )*/
-			&& parser->prev_tk.type != RBRACKET) )
-	{
+	if( is_incr_or_decr( tk ) ) {
 		parser->un_op = 1;
+	}
+	else if( is_unary_op( tk )
+	         && !is_incr_or_decr( &(parser->prev_tk) )
+	         && parser->prev_tk.type != IDENT
+	         && parser->prev_tk.type != NUM_CONST
+	         && parser->prev_tk.type != CHR_LIT
+	         && parser->prev_tk.type != STR_LIT
+	         && parser->prev_tk.type != RBRACKET )
+	{
+		if( parser->prev_tk.type != RPAREN ) {
+			parser->un_op = 1;
+		}
+		else if( parser->in_branch ) {
+			parser->un_op = 1;
+		}
 	}
 	else {
 		parser->un_op = 0;
 	}
 
-	if( parser->in_branch
-	    && parser->parens_closed )
-	{
-		if( !parser->empty_line
-			/*&& parser->prev_closing_paren*/ )
+	if( parser->in_branch ) {
+
+		if( parser->parens_closed )
 		{
-			putc( '\n', out );
-			parser->empty_line = 1;
+			if( !parser->empty_line )
+			{
+				putc( '\n', out );
+				parser->empty_line = 1;
+			}
+
+			parser->in_branch = 0;
+			++parser->indent;
 		}
-		parser->in_branch = 0;
-		++parser->indent;
 	}
-	else if( !parser->in_branch ) {
-		if( parser->prev_tk.type == SEMICOLON ) {
-			putc( '\n', out );
-			parser->empty_line = 1;
-		}
+	else if( parser->prev_tk.type == SEMICOLON ) {
+		putc( '\n', out );
+		parser->empty_line = 1;
 	}
 
 	if( parser->empty_line
 	    && !push_indent( parser->indent, out ))
 		return 0;
+
 	if( parser->in_branch
 	    && !parser->parens_closed
 	    && parser->empty_line ) 
@@ -630,7 +594,6 @@ static int handle_token_op( Token * tk, Parser * parser, FILE * out )
 	if( !push_token( tk, out ) )
 		return 0;
 	parser->empty_line = 0;
-	/*parser->prev_closing_paren = 0;*/
 	return 1;
 }
 
@@ -638,17 +601,19 @@ static int handle_token_ellipsis( Token * tk, Parser * parser, FILE * out )
 {
 	if( !tk || !parser || !out )
 		return 0;
+
 	if( !parser->empty_line )
 		putc( ' ', out );
+
 	if( parser->empty_line
 	    && !push_indent( parser->indent, out ))
 		return 0;
+
 	if( !push_token( tk, out ) )
 		return 0;
+
 	parser->empty_line = 0;
-	if( parser->un_op )
-		parser->un_op = 0;
-	/*parser->prev_closing_paren = 0;*/
+	parser->un_op = 0;
 	return 1;
 }
 
@@ -656,11 +621,12 @@ static int handle_token_sep( Token * tk, Parser * parser, FILE * out )
 {
 	if( !tk || !parser || !out )
 		return 0;
+
 	if( parser->empty_line
 	    && !push_indent( parser->indent, out ))
 		return 0;
+
 	if( parser->in_branch
-		/*&& parser->paren_depth*/
 	    && !parser->parens_closed
 	    && parser->empty_line ) 
 	{
@@ -668,12 +634,12 @@ static int handle_token_sep( Token * tk, Parser * parser, FILE * out )
 		for( i = 4; i > 0; --i )
 			putc( ' ', out );
 	}
+
 	if( !push_token( tk, out ) )
 		return 0;
+
 	parser->empty_line = 0;
-	if( parser->un_op )
-		parser->un_op = 0;
-	/*parser->prev_closing_paren = 0;*/
+	parser->un_op = 0;
 	return 1;
 }
 
@@ -681,16 +647,12 @@ static int handle_token_semicolon( Token * tk, Parser * parser, FILE * out )
 {
 	if( !tk || !parser || !out )
 		return 0;
+
 	if( parser->empty_line
 	    && !push_indent( parser->indent, out ) )
 		return 0;
-#ifdef DEBUG_ON
-	/*if( parser->in_branch )
-		putc( '?', out );*/
-#endif
-	if( parser->in_branch
-		/*&& parser->paren_depth*/
-	  )	
+
+	if( parser->in_branch )	
 	{
 		if( parser->parens_closed ) {
 			parser->in_branch = 0;
@@ -701,24 +663,21 @@ static int handle_token_semicolon( Token * tk, Parser * parser, FILE * out )
 				putc( ' ', out );
 		}
 	}
+
 	if( !push_token( tk, out ) )
 		return 0;
-	if( !parser->in_branch 
-		/*|| parser->prev_closing_paren*/ )
+
+	if( !parser->in_branch )
 	{
 		if( parser->last_brace_indent )
 			parser->indent = parser->brace_indent[parser
 				->last_brace_indent] + 1;
 		else
 			parser->indent = 0;
-		/*if( parser->prev_closing_paren ) {*/
-			/*parser->in_branch = 0;*/
-			/*parser->prev_closing_paren = 0;*/
-		/*}*/
 	}
+
 	parser->empty_line = 0;
-	if( parser->un_op )
-		parser->un_op = 0;
+	parser->un_op = 0;
 
 	return 1;
 }
@@ -727,13 +686,12 @@ static int handle_token_colon( Token * tk, Parser * parser, FILE * out )
 {
 	if( !tk || !parser || !out )
 		return 0;
-	/*if( parser->prev_tk.type != EOL_TOK )*/
-		/*putc( ' ', out );*/
+
 	if( parser->empty_line
 	    && !push_indent( parser->indent, out ))
 		return 0;
+
 	if( parser->in_branch
-		/*&& parser->paren_depth*/
 	    && !parser->parens_closed
 	    && parser->empty_line ) 
 	{
@@ -741,12 +699,12 @@ static int handle_token_colon( Token * tk, Parser * parser, FILE * out )
 		for( i = 4; i > 0; --i )
 			putc( ' ', out );
 	}
+
 	if( !push_token( tk, out ) )
 		return 0;
+
 	parser->empty_line = 0;
-	if( parser->un_op )
-		parser->un_op = 0;
-	/*parser->prev_closing_paren = 0;*/
+	parser->un_op = 0;
 	return 1;
 }
 
@@ -754,20 +712,20 @@ static int handle_token_eol( Token * tk, Parser * parser, FILE * out )
 {
 	if( !tk || !parser || !out )
 		return 0;
+
 	if( !push_token( tk, out ) ) {
 		return 0;
 	}
-	putc( '@', out );
+
 	parser->empty_line = 1;
-	if( parser->un_op )
-		parser->un_op = 0;
+	parser->un_op = 0;
 	return 1;
 }
 
 static int handle_token( Token * tk, Parser * parser, FILE * out)
 {
-	/* PREPROC */
 	if( tk->type == PREPROC ) {
+
 		if( !push_token( tk, out ) ) {
 			return 0;
 		}
@@ -875,7 +833,6 @@ int parse( Parser * parser, FileBuf * buf, FILE * out )
 			return 0;
 		if( cur_tk.type != EOL_TOK ) {
 			parser->prev_tk = cur_tk;
-			/*parser->prev_nonwhite_tk = cur_tk;*/
 		}
 		buf->head = cur_tk.end;
 #ifdef DEBUG_ON
