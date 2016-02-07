@@ -9,7 +9,7 @@
 #include "token.h"
 typedef struct parser {
 	Token prev_tk;
-	Token prev_nonwhite_tk;
+	//Token prev_nonwhite_tk;
 
 	/* bools */ 
 	int empty_line; /* == 1 if in there is nothing in current line of 
