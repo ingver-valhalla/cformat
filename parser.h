@@ -9,16 +9,14 @@
 #include "token.h"
 typedef struct parser {
 	Token prev_tk;
-	//Token prev_nonwhite_tk;
 
 	/* bools */ 
 	int empty_line; /* == 1 if in there is nothing in current line of 
-		        * output file, except whitespaces. == 0
-		        * otherwise. */
+	                 * output file, except whitespaces. == 0
+	                 * otherwise. */
 	int un_op;
 	int in_branch;
 	int parens_closed;
-	//int prev_closing_paren;
 	/* ----- */
 
 	int cur_line;
